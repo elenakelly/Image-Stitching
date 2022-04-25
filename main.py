@@ -1,11 +1,7 @@
-
-from itertools import count
-from matplotlib import image
 import numpy as np 
 import cv2
 import glob
 import imutils
-from cv2 import erode
 
 image_paths = glob.glob('images/*.jpeg')
 images = []
@@ -49,7 +45,7 @@ if not error:
     #subtract the min rectangle from the image
     sub = mask.copy()
     while cv2.countNonZero(sub)> 0:
-        min_rectangle = erode(min_rectangle, None)
+        min_rectangle = cv2.erode(min_rectangle, None)
         sub = cv2.subtract(min_rectangle, threshold)
     
     contours =cv2.findContours(min_rectangle.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
