@@ -3,7 +3,7 @@ import cv2
 import glob
 import imutils
 
-image_paths = glob.glob('images/*.jpeg')
+image_paths = glob.glob('images/*.png')
 images = []
 
 #storing each image path
