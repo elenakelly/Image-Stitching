@@ -105,6 +105,7 @@ color = 'red'
 ax.plot( [ kp1[match_kp[:,0], 0], img1_rgb.shape[1] + white_strip.shape[1] + kp2[match_kp[:,1], 0]  ],
         [ kp1[match_kp[:,0], 1], kp2[match_kp[:,1], 1] ],
         color=color, marker='*', linestyle='-', linewidth=1, markersize=5)
+ax.set_title('Matching Points')
 ax.axis('off')
 plt.show()
 
@@ -157,11 +158,13 @@ for i in range( 1000):
     avg_inlier_residual = np.mean(inlier_residuals, axis=0)
 
     # Apply threshold and Refit
-    if inlier_count >=  15:
+    if inlier_count >=  5:
         # The model is good -- Fit the model on all the inliers
         candidate_model, _, _, _ = np.linalg.lstsq(inlier_kp2, inlier_kp1, rcond=None)
         candidate_model_list.append(tuple([candidate_model, avg_inlier_residual, inlier_indices]))
-
+    if len(candidate_model_list) == 0:
+        print("No model found")
+        continue
 candidate_model_list = sorted(candidate_model_list, key=lambda c: c[1])
 affine_matrix, avg_residual, inlier_indices, = candidate_model_list[0]
 
@@ -195,6 +198,7 @@ ax.plot( [ kp1[outlier_indices[:,0], 0], img1_rgb.shape[1] + white_strip.shape[1
 ax.plot( [ kp1[inlier_indices[:,0], 0], img1_rgb.shape[1] + white_strip.shape[1] + kp2[inlier_indices[:,1], 0]  ],
             [ kp1[inlier_indices[:,0], 1], kp2[inlier_indices[:,1], 1] ],
             color=inlier_color, marker='*', linestyle='-', linewidth=1, markersize=5)
+ax.set_title("Matching results")
 ax.axis('off')
 plt.show()
 
