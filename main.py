@@ -164,7 +164,7 @@ for i in range(1200):
     if len(candidate_model_list) == 0:
         print("No model found")
         continue
-#candidate_model_list = sorted(candidate_model_list, key=lambda c: c[1])
+
 affine_matrix, avg_residual, inlier_indices, = candidate_model_list[4]
 
 
