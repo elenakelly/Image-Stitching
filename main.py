@@ -1,15 +1,14 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-import imageio
 import scipy.spatial
 
 ### Load the images ###
-img1 = cv2.imread('images/leftimage.png') #query image
+img1 = cv2.imread('images/one.jpg') #query image
 img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
 img1_rgb = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
 
-img2= cv2.imread('images/rightimage.png') #train image
+img2= cv2.imread('images/two.jpg') #train image
 img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 img2_rgb = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
 
@@ -31,26 +30,26 @@ img1_harris = cv2.cornerHarris(img1_gray, 2, 3, 0.04)
 img1_harris = cv2.dilate(img1_harris, None)
 ret, img1_harris = cv2.threshold(img1_harris, 0.05 * img1_harris.max(), 255, 0)
 img1_harris = np.uint8(img1_harris)
-_,_,_, centroids = cv2.connectedComponentsWithStats(img1_harris)
-kp1 = centroids.copy().astype(np.uint16)
+_,_,_, c = cv2.connectedComponentsWithStats(img1_harris)
+kp1 = c.copy().astype(np.uint16)
 
 img2_harris = cv2.cornerHarris(img2_gray, 2, 3, 0.04)
 img2_harris = cv2.dilate(img2_harris, None)
 ret, img2_harris = cv2.threshold(img2_harris, 0.05 * img2_harris.max(), 255, 0)
 img2_harris = np.uint8(img2_harris)
-_,_,_, centroids = cv2.connectedComponentsWithStats(img2_harris)
-kp2 = centroids.copy().astype(np.uint16)
+_,_,_, c = cv2.connectedComponentsWithStats(img2_harris)
+kp2 = c.copy().astype(np.uint16)
 
 
 ### Visualize the results ###
 fig, (ax1, ax2) = plt.subplots(1, 2, constrained_layout = False ,figsize=(10, 5))
 ax1.imshow(img1_rgb, cmap='gray')
 ax1.plot(kp1[:,0], kp1[:,1], 'r*')
-ax1.set_title('(a)')
+ax1.set_title('Keypoints (a)')
 ax1.axis('off')
 ax2.imshow(img2_rgb, cmap='gray')
 ax2.plot(kp2[:,0], kp2[:,1], 'r*')
-ax2.set_title('(b)')
+ax2.set_title('Keypoints (b)')
 ax2.axis('off')
 plt.show()
 
@@ -105,7 +104,7 @@ color = 'red'
 ax.plot( [ kp1[match_kp[:,0], 0], img1_rgb.shape[1] + white_strip.shape[1] + kp2[match_kp[:,1], 0]  ],
         [ kp1[match_kp[:,0], 1], kp2[match_kp[:,1], 1] ],
         color=color, marker='*', linestyle='-', linewidth=1, markersize=5)
-ax.set_title('Matching Points')
+ax.set_title('Matching Key-Points')
 ax.axis('off')
 plt.show()
 
@@ -114,7 +113,7 @@ plt.show()
 
 candidate_model_list = []
 used_samples = []
-for i in range( 1000):
+for i in range(1200):
     # Sample random matching pairs
     indices_of_indices = np.random.choice(match_kp.shape[0], size= 3, replace=False)
     if tuple(indices_of_indices) in used_samples:
@@ -140,7 +139,7 @@ for i in range( 1000):
             # Calculate error(euc distance b/w prediction and truth, in image coordinates)
             dist_from_model = np.linalg.norm(pt1_true-pt1_hypothesis,ord=2)
 
-            if dist_from_model <= 40:
+            if dist_from_model <= 5:
                 #print(dist_from_model)
                 inlier_count += 1
                 inlier_indices.append(pair_indices)
@@ -158,15 +157,16 @@ for i in range( 1000):
     avg_inlier_residual = np.mean(inlier_residuals, axis=0)
 
     # Apply threshold and Refit
-    if inlier_count >=  5:
+    if inlier_count >=  1:
         # The model is good -- Fit the model on all the inliers
         candidate_model, _, _, _ = np.linalg.lstsq(inlier_kp2, inlier_kp1, rcond=None)
         candidate_model_list.append(tuple([candidate_model, avg_inlier_residual, inlier_indices]))
     if len(candidate_model_list) == 0:
         print("No model found")
         continue
-candidate_model_list = sorted(candidate_model_list, key=lambda c: c[1])
-affine_matrix, avg_residual, inlier_indices, = candidate_model_list[0]
+#candidate_model_list = sorted(candidate_model_list, key=lambda c: c[1])
+affine_matrix, avg_residual, inlier_indices, = candidate_model_list[4]
+
 
 print("Number of inliers: ", inlier_indices.shape[0])
 print("Number of outliers: ", match_kp.shape[0] - inlier_indices.shape[0])
@@ -199,6 +199,7 @@ ax.plot( [ kp1[inlier_indices[:,0], 0], img1_rgb.shape[1] + white_strip.shape[1]
             [ kp1[inlier_indices[:,0], 1], kp2[inlier_indices[:,1], 1] ],
             color=inlier_color, marker='*', linestyle='-', linewidth=1, markersize=5)
 ax.set_title("Matching results")
+ax.legend(['Outlier', 'Inlier'])
 ax.axis('off')
 plt.show()
 
